@@ -1,0 +1,11 @@
+
+file_format: "1"
+id: ubwl_m40it3_v03_fixed
+name: ubwl_m40it3_v03_fixed
+type: shield
+features:
+  - keys
+  - studio
+outputs:
+  - usb
+  - ble
