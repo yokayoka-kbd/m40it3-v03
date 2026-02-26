@@ -1,0 +1,11 @@
+
+file_format: "1"
+id: m40it3
+name: m40it3
+type: shield
+features:
+  - keys
+  - studio
+outputs:
+  - usb
+  - ble

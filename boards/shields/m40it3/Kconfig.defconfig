@@ -1,0 +1,7 @@
+
+if SHIELD_M40IT3
+
+config ZMK_KEYBOARD_NAME
+    default "m40it3"
+
+endif

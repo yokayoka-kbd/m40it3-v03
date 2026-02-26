@@ -1,0 +1,3 @@
+
+config SHIELD_M40IT3
+    def_bool $(shields_list_contains,m40it3)
