@@ -1,0 +1,7 @@
+
+if SHIELD_UBWL_M40IT3_V03_FIXED
+
+config ZMK_KEYBOARD_NAME
+    default "ubwl_m40it3_v03_fixed"
+
+endif
