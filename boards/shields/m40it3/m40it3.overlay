@@ -2,12 +2,12 @@
 #include <dt-bindings/zmk/input_transform.h>
 #include "layouts.dtsi"
 
-/* ▽ 全ての命令を直接定義（外部ファイル依存を解消） ▽ */
+/* ▽ 命令の直接定義（エラー箇所の修正済み） ▽ */
 / {
     /* XY移動をスクロールに変換する定義 */
     zip_xy_to_scroll_y: zip_xy_to_scroll_y {
         compatible = "zmk,input-processor-transform";
-        #input-processor-cells = <0>;
+        #input-processor-cells = <1>; /* ←ここを 1 に修正しました */
         type = <0x02>;           /* INPUT_EV_REL */
         x-codes = <0x00>, <0x08>; /* REL_X, REL_WHEEL */
         y-codes = <0x01>, <0x06>; /* REL_Y, REL_HWHEEL */
@@ -69,13 +69,13 @@
         compatible = "zmk,input-listener";
         device = <&trackball>;
         
-        /* 1. 通常時のXY変換（入れ替え・反転） */
+        /* 1. 通常時のXY変換 */
         input-processors = <&zip_xy_transform (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
         /* 2. レイヤー1の時のスクロール変換 */
         scrolling {
             layers = <1>;
-            input-processors = <&zip_xy_to_scroll_y>;
+            input-processors = <&zip_xy_to_scroll_y 0>; /* ←ここも 0 を追記しました */
         };
     };
 };
@@ -85,7 +85,6 @@
     transform = <&default_transform>;
 };
 
-/* ピン設定とSPI設定は変更なし */
 &pinctrl {
     spi0_default: spi0_default {
         group1 {
