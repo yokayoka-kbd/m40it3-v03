@@ -7,41 +7,40 @@
 #include "../../../config/keymap.keymap"
 
 / {
-    /* 通常移動用：XY入れ替え(SWAP) と X反転(INVERT) を適用 */
+    /* 通常移動用：XY入れ替え(SWAP) と X反転(INVERT) */
     zip_xy: zip_xy {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
-        type = <0x02>; /* REL */
-        x-codes = <0x00>; /* X */
-        y-codes = <0x01>; /* Y */
+        type = <0x02>;
+        x-codes = <0x00>;
+        y-codes = <0x01>;
     };
 
-    /* スクロール用：通常移動の設定を一切入れず、ここで軸を直接合わせる */
+    /* スクロール用：
+       物理センサーの軸を「OSが期待するスクロール方向」に直接変換します。
+       上下移動を垂直ホイール(08)、左右移動を水平ホイール(06)へ。
+    */
     zip_scroll: zip_scroll {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
-        type = <0x02>; /* REL */
-        /* あなたの環境（XY_SWAP | X_INVERT）でのスクロール方向を補正：
-           センサーの X(00) -> 垂直ホイール(08)
-           センサーの Y(01) -> 水平ホイール(06) 反転
-        */
-        x-codes = <0x00>, <0x08>; 
-        y-codes = <0x01>, <0x06>;
+        type = <0x02>;
+        x-codes = <0x01>, <0x08>; /* 物理Y(上下) -> 垂直スクロール */
+        y-codes = <0x00>, <0x06>; /* 物理X(左右) -> 水平スクロール */
     };
 
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
         
-        /* 通常時の移動設定 */
+        /* デフォルト：通常移動 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* mo 1 (layer_1) 押下時のスクロール設定 */
+        /* mo 1 (layer_1) 押下時：
+           第2引数を 0 にすることで、通常移動の SWAP/INVERT 設定を完全に遮断し、
+           zip_scroll の設定だけを適用させます。
+        */
         scrolling {
-            layers = <1>; 
-            /* ポイント：通常時の TRANSFORM 設定を引き継がないよう、
-               第2引数（TRANSFORM）を 0 にして直接 zip_scroll で制御します 
-            */
+            layers = <1>;
             input-processors = <&zip_scroll 0>;
         };
     };
