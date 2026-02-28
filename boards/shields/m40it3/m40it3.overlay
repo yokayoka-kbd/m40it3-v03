@@ -2,14 +2,24 @@
 #include <dt-bindings/zmk/input_transform.h>
 #include "layouts.dtsi"
 
-/* ▽ zip_xy_to_scroll_y の直接定義 ▽ */
+/* ▽ 全ての命令を直接定義（外部ファイル依存を解消） ▽ */
 / {
+    /* XY移動をスクロールに変換する定義 */
     zip_xy_to_scroll_y: zip_xy_to_scroll_y {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <0>;
         type = <0x02>;           /* INPUT_EV_REL */
         x-codes = <0x00>, <0x08>; /* REL_X, REL_WHEEL */
         y-codes = <0x01>, <0x06>; /* REL_Y, REL_HWHEEL */
+    };
+
+    /* XY移動の方向や入れ替えを行う定義 */
+    zip_xy_transform: zip_xy_transform {
+        compatible = "zmk,input-processor-transform";
+        #input-processor-cells = <1>;
+        type = <0x02>; /* INPUT_EV_REL */
+        x-codes = <0x00>; /* REL_X */
+        y-codes = <0x01>; /* REL_Y */
     };
 };
 /* △ ここまで △ */
@@ -58,8 +68,11 @@
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
+        
+        /* 1. 通常時のXY変換（入れ替え・反転） */
         input-processors = <&zip_xy_transform (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
+        /* 2. レイヤー1の時のスクロール変換 */
         scrolling {
             layers = <1>;
             input-processors = <&zip_xy_to_scroll_y>;
@@ -72,6 +85,7 @@
     transform = <&default_transform>;
 };
 
+/* ピン設定とSPI設定は変更なし */
 &pinctrl {
     spi0_default: spi0_default {
         group1 {
@@ -80,7 +94,6 @@
                 <NRF_PSEL(SPIM_MISO, 1, 9)>;
         };
     };
-
     spi0_sleep: spi0_sleep {
         group1 {
             psels = <NRF_PSEL(SPIM_SCK, 0, 12)>,
@@ -98,7 +111,6 @@
     pinctrl-1 = <&spi0_sleep>;
     pinctrl-names = "default", "sleep";
     cs-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
-
     trackball: trackball@0 {
         status = "okay";
         compatible = "pixart,paw3222";
