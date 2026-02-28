@@ -2,29 +2,7 @@
 #include <dt-bindings/zmk/input_transform.h>
 #include "layouts.dtsi"
 
-/* ▽ 1. 必要な部品の定義 ▽ */
-/ {
-    /* 通常のXY移動用 */
-    zip_xy_transform: zip_xy_transform {
-        compatible = "zmk,input-processor-transform";
-        #input-processor-cells = <1>;
-        type = <0x02>;
-        x-codes = <0x00>;
-        y-codes = <0x01>;
-    };
-
-    /* スクロール変換用（軸を XY_SWAP | X_INVERT に合わせたもの） */
-    zip_scroll_transform: zip_scroll_transform {
-        compatible = "zmk,input-processor-transform";
-        #input-processor-cells = <1>; /* 0から1に修正 */
-        type = <0x02>;
-        /* センサーのY(縦)をホイールに、X(横)を反転させて水平スクロールに */
-        x-codes = <0x01>, <0x08>; 
-        y-codes = <0x00>, <0x06>;
-    };
-};
-
-/* ▽ 2. センサー本体（listenerより先に定義） ▽ */
+/* ▽ 1. 物理センサーの設定（依存関係の最上位） ▽ */
 &pinctrl {
     spi0_default: spi0_default {
         group1 {
@@ -60,7 +38,29 @@
     };
 };
 
-/* ▽ 3. 全体設定 ▽ */
+/* ▽ 2. 入力変換プロセッサの定義 ▽ */
+/ {
+    /* 通常のXY移動用 */
+    zip_xy_transform: zip_xy_transform {
+        compatible = "zmk,input-processor-transform";
+        #input-processor-cells = <1>;
+        type = <0x02>;           /* INPUT_EV_REL */
+        x-codes = <0x00>;        /* REL_X */
+        y-codes = <0x01>;        /* REL_Y */
+    };
+
+    /* スクロール変換用（軸調整済み） */
+    zip_scroll_transform: zip_scroll_transform {
+        compatible = "zmk,input-processor-transform";
+        #input-processor-cells = <1>;
+        type = <0x02>;           /* INPUT_EV_REL */
+        /* 軸入れ替え(XY_SWAP)と反転(X_INVERT)を考慮したマッピング */
+        x-codes = <0x01>, <0x08>; /* センサーのYをREL_WHEEL(垂直)へ */
+        y-codes = <0x00>, <0x06>; /* センサーのXをREL_HWHEEL(水平)へ */
+    };
+};
+
+/* ▽ 3. キーボード全体の設定 ▽ */
 / {
     chosen {
         zmk,physical-layout = &physical_layout0;
@@ -102,18 +102,19 @@
             ;
     };
 
-    /* ▽ 4. 挙動の設定 ▽ */
+    /* ▽ 4. リスナー設定（挙動の心臓部） ▽ */
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
 
-        /* 通常時：XY_SWAP | X_INVERT を維持 */
+        /* [重要] 通常時のXY変換 */
         input-processors = <&zip_xy_transform (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* レイヤー1押下時：スクロール専用の設定を適用 */
+        /* [重要] レイヤー1での挙動定義 */
         scrolling {
             layers = <1>;
-            input-processors = <&zip_scroll_transform 0>; /* 最後に0を追加 */
+            /* 通常のXY変換を上書きしてスクロールに変換 */
+            input-processors = <&zip_scroll_transform 0>;
         };
     };
 };
