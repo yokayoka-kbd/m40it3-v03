@@ -50,6 +50,12 @@
         compatible = "zmk,input-listener";
         device = <&trackball>;
         input-processors = <&zip_xy_transform (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
+
+        /* ここから追記：レイヤー1の時にスクロールに変換 */
+        scrolling {
+            layers = <1>;
+            input-processors = <&zip_xy_to_scroll_y>;
+        };
     };
 };
 
