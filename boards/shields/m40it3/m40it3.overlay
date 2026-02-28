@@ -2,7 +2,7 @@
 #include <dt-bindings/zmk/input_transform.h>
 #include "layouts.dtsi"
 
-/* ▽ 1. 必要な部品の定義（名前解決エラーを防ぐため冒頭に配置） ▽ */
+/* ▽ 1. 必要な部品の定義 ▽ */
 / {
     /* 通常のXY移動用 */
     zip_xy_transform: zip_xy_transform {
@@ -13,10 +13,10 @@
         y-codes = <0x01>;
     };
 
-    /* スクロール変換用（あなたの軸 XY_SWAP | X_INVERT に合わせた割り当て） */
+    /* スクロール変換用（軸を XY_SWAP | X_INVERT に合わせたもの） */
     zip_scroll_transform: zip_scroll_transform {
         compatible = "zmk,input-processor-transform";
-        #input-processor-cells = <0>;
+        #input-processor-cells = <1>; /* 0から1に修正 */
         type = <0x02>;
         /* センサーのY(縦)をホイールに、X(横)を反転させて水平スクロールに */
         x-codes = <0x01>, <0x08>; 
@@ -24,7 +24,7 @@
     };
 };
 
-/* ▽ 2. センサー本体の定義（listenerより先に書く必要があります） ▽ */
+/* ▽ 2. センサー本体（listenerより先に定義） ▽ */
 &pinctrl {
     spi0_default: spi0_default {
         group1 {
@@ -107,13 +107,13 @@
         compatible = "zmk,input-listener";
         device = <&trackball>;
 
-        /* 通常時：あなたが使っていた軸設定をそのまま適用 */
+        /* 通常時：XY_SWAP | X_INVERT を維持 */
         input-processors = <&zip_xy_transform (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* レイヤー1押下時：スクロール用の軸設定に上書き */
+        /* レイヤー1押下時：スクロール専用の設定を適用 */
         scrolling {
             layers = <1>;
-            input-processors = <&zip_scroll_transform>;
+            input-processors = <&zip_scroll_transform 0>; /* 最後に0を追加 */
         };
     };
 };
