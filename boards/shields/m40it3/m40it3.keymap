@@ -7,37 +7,36 @@
 #include "../../../config/keymap.keymap"
 
 / {
-    /* 通常のXY移動用：REL_XとREL_Yをそのまま使う */
-    zip_xy_transform: zip_xy_transform {
+    /* 通常移動用の変換定義 */
+    zip_xy: zip_xy {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
-        type = <0x02>; /* INPUT_EV_REL */
-        x-codes = <0x00>; /* REL_X */
-        y-codes = <0x01>; /* REL_Y */
+        type = <0x02>; /* REL */
+        x-codes = <0x00>; /* X */
+        y-codes = <0x01>; /* Y */
     };
 
-    /* スクロール変換用：センサーの値を垂直・水平ホイールに振り分ける */
-    zip_scroll_transform: zip_scroll_transform {
+    /* スクロール用の変換定義：XYの移動をホイール信号にマッピング */
+    zip_scroll: zip_scroll {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
-        type = <0x02>; /* INPUT_EV_REL */
-        /* 軸調整：垂直スクロール(0x08)と水平スクロール(0x06)にマッピング */
-        x-codes = <0x01>, <0x08>; 
-        y-codes = <0x00>, <0x06>;
+        type = <0x02>; /* REL */
+        /* XY_SWAP | X_INVERT 環境に合わせたスクロール軸設定 */
+        x-codes = <0x01>, <0x08>; /* 縦移動 -> 垂直ホイール */
+        y-codes = <0x00>, <0x06>; /* 横移動 -> 水平ホイール */
     };
 
-    /* トラックボールの挙動を管理するリスナー */
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
+        
+        /* 1. デフォルト設定：通常のカーソル移動（XY入れ替え＋X反転） */
+        input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* 通常時：あなたが使い慣れている軸設定（XY入れ替え＋X反転） */
-        input-processors = <&zip_xy_transform (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
-
-        /* レイヤー1（mo 1）がONの時だけ、上記の設定をスクロールに上書き */
+        /* 2. レイヤー設定：layer_1 (mo 1) がONの時だけ、上記をスクロールに切り替え */
         scrolling {
-            layers = <1>; 
-            input-processors = <&zip_scroll_transform 0>;
+            layers = <1>; /* keymap.keymap内のlayer_1を監視 */
+            input-processors = <&zip_scroll 0>;
         };
     };
 };
