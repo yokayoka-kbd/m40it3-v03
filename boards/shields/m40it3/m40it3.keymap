@@ -7,7 +7,7 @@
 #include "../../../config/keymap.keymap"
 
 / {
-    /* 通常移動用の変換定義 */
+    /* 通常移動用：XY入れ替え(SWAP) と X反転(INVERT) を適用 */
     zip_xy: zip_xy {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
@@ -16,26 +16,32 @@
         y-codes = <0x01>; /* Y */
     };
 
-    /* スクロール用の変換定義：XYの移動をホイール信号にマッピング */
+    /* スクロール用：通常移動の設定を一切入れず、ここで軸を直接合わせる */
     zip_scroll: zip_scroll {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
         type = <0x02>; /* REL */
-        /* XY_SWAP | X_INVERT 環境に合わせたスクロール軸設定 */
-        x-codes = <0x01>, <0x08>; /* 縦移動 -> 垂直ホイール */
-        y-codes = <0x00>, <0x06>; /* 横移動 -> 水平ホイール */
+        /* あなたの環境（XY_SWAP | X_INVERT）でのスクロール方向を補正：
+           センサーの X(00) -> 垂直ホイール(08)
+           センサーの Y(01) -> 水平ホイール(06) 反転
+        */
+        x-codes = <0x00>, <0x08>; 
+        y-codes = <0x01>, <0x06>;
     };
 
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
         
-        /* 1. デフォルト設定：通常のカーソル移動（XY入れ替え＋X反転） */
+        /* 通常時の移動設定 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* 2. レイヤー設定：layer_1 (mo 1) がONの時だけ、上記をスクロールに切り替え */
+        /* mo 1 (layer_1) 押下時のスクロール設定 */
         scrolling {
-            layers = <1>; /* keymap.keymap内のlayer_1を監視 */
+            layers = <1>; 
+            /* ポイント：通常時の TRANSFORM 設定を引き継がないよう、
+               第2引数（TRANSFORM）を 0 にして直接 zip_scroll で制御します 
+            */
             input-processors = <&zip_scroll 0>;
         };
     };
