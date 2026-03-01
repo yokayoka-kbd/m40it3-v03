@@ -4,6 +4,22 @@
 #include <dt-bindings/zmk/pointing.h>
 
 / {
+    macros {
+        new_menu: new_menu {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings =
+                <&macro_press>,
+                <&kp LSHIFT>,
+                <&macro_tap>,
+                <&kp K_APP>,
+                <&macro_release>,
+                <&kp LEFT_SHIFT>;
+
+            label = "NEW_MENU";
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
 
@@ -18,10 +34,10 @@
 
         layer_1 {
             bindings = <
-&kp F1          &kp F2  &kp F3  &kp F4   &kp F5   &kp HOME  &kp PG_UP               &kp UP_ARROW    &kp PG_DN        &kp BACKSPACE
-&mt LCTRL F6    &kp F7  &kp F8  &kp F9   &kp F10  &kp END   &kp LEFT_ARROW          &kp DOWN_ARROW  &kp RIGHT_ARROW  &kp RCTRL
-&kp LEFT_SHIFT  &none   &none   &kp F11  &kp F12  &kp INS   &kp LS(K_CONTEXT_MENU)  &kp LC(SPACE)   &kp CAPSLOCK     &kp RIGHT_SHIFT
-&trans          &trans  &trans  &trans   &trans   &trans    &trans                  &trans          &trans           &trans
+&kp F1          &kp F2  &kp F3  &kp F4   &kp F5   &kp HOME  &kp PG_UP       &kp UP_ARROW    &kp PG_DN        &kp BACKSPACE
+&mt LCTRL F6    &kp F7  &kp F8  &kp F9   &kp F10  &kp END   &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW  &kp RCTRL
+&kp LEFT_SHIFT  &none   &none   &kp F11  &kp F12  &kp INS   &new_menu       &kp LC(SPACE)   &kp CAPSLOCK     &kp RIGHT_SHIFT
+&trans          &trans  &trans  &trans   &trans   &trans    &trans          &trans          &trans           &trans
             >;
         };
 
