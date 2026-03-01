@@ -4,7 +4,7 @@
 #include <dt-bindings/zmk/pointing.h>
 
 / {
-    /* 通常移動用：あなたの環境で正しい「XY入れ替え＋X反転」を定義 */
+    /* 1. 通常移動用の設定：XY入れ替え(SWAP) と X反転(INVERT) */
     zip_xy: zip_xy {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
@@ -13,36 +13,39 @@
         y-codes = <0x01>;
     };
 
-    /* スクロール用：通常移動の「XY入れ替え」が適用される前の生データを使って、
-       物理的な移動方向を直接ホイールに紐付けます。
-       左右(X) -> 垂直スクロール(WHEEL)
-       上下(Y) -> 水平スクロール(HWHEEL) にあえて設定します。
-    */
-    zip_scroll: zip_scroll {
-        compatible = "zmk,input-processor-transform";
-        #input-processor-cells = <1>;
+    /* 2. 【重要】移動をスクロール信号（ホイール）に変換するマッパー */
+    /* 左右移動(00)を垂直ホイール(08)に、上下移動(01)を水平ホイール(06)に変換。
+       あなたの環境で「左右に転がすと上下に動く」というズレをここで吸収します。 */
+    zip_xy_to_scroll_mapper: zip_xy_to_scroll_mapper {
+        compatible = "zmk,input-processor-code-mapper";
+        #input-processor-cells = <0>;
         type = <0x02>;
-        x-codes = <0x00 0x08>; /* 生データXを垂直スクロールへ */
-        y-codes = <0x01 0x06>; /* 生データYを水平スクロールへ */
+        map = <0x00 0x08>, <0x01 0x06>;
+    };
+
+    /* 3. スクロールの速さを調整（爆速にならないように1/4の速度に落とす） */
+    zip_scroll_scaler: zip_scroll_scaler {
+        compatible = "zmk,input-processor-scaler";
+        #input-processor-cells = <2>;
+        type = <0x02>;
     };
 
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
         
-        /* デフォルト：通常移動 */
-        /* ここで明示的に軸を入れ替えています */
+        /* 通常時：いつもの快適なカーソル移動設定 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* ▽ 修正ポイント：強制切り替え ▽ */
-        /* layer 1 がONの時、通常移動の「SWAP」を無視してスクロール専用軸を適用 */
+        /* ▽ レイヤー1(mo 1) 押下時のスクロール動作 ▽ */
         scrolling {
             layers = <1>;
-            input-processors = <&zip_scroll 0>;
+            /* ①スクロール信号に変換し、②速度を調整する。
+               ここで通常時の zip_xy 設定は自動的に解除されます。 */
+            input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 4>;
         };
     };
 };
 
-/* 外部のキーマップ（レイヤー定義）を「最後」に読み込むことで、
-   上記で定義したリスナーがレイヤー情報を上書きされないようにします */
+/* 最後に本体のキーマップを読み込む */
 #include "../../../config/keymap.keymap"
