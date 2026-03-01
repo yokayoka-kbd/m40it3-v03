@@ -13,9 +13,8 @@
         y-codes = <0x01>;
     };
 
-    /* 2. 【重要】移動をスクロール信号（ホイール）に変換するマッパー */
-    /* 左右移動(00)を垂直ホイール(08)に、上下移動(01)を水平ホイール(06)に変換。
-       あなたの環境で「左右に転がすと上下に動く」というズレをここで吸収します。 */
+    /* 2. 移動をスクロール信号（ホイール）に変換するマッパー */
+    /* 左右移動(00)を垂直ホイール(08)に、上下移動(01)を水平ホイール(06)に変換 */
     zip_xy_to_scroll_mapper: zip_xy_to_scroll_mapper {
         compatible = "zmk,input-processor-code-mapper";
         #input-processor-cells = <0>;
@@ -23,11 +22,13 @@
         map = <0x00 0x08>, <0x01 0x06>;
     };
 
-    /* 3. スクロールの速さを調整（爆速にならないように1/4の速度に落とす） */
+    /* 3. 【修正ポイント】スクロールの速さを調整 */
+    /* codes = <0x08 0x06>; を追加し、ホイール信号のみを減速対象に指定しました */
     zip_scroll_scaler: zip_scroll_scaler {
         compatible = "zmk,input-processor-scaler";
         #input-processor-cells = <2>;
         type = <0x02>;
+        codes = <0x08 0x06>; 
     };
 
     trackball_listener: trackball_listener {
@@ -37,11 +38,10 @@
         /* 通常時：いつもの快適なカーソル移動設定 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* ▽ レイヤー1(mo 1) 押下時のスクロール動作 ▽ */
+        /* Layer 1 (mo 1) 押下時のスクロール動作 */
         scrolling {
             layers = <1>;
-            /* ①スクロール信号に変換し、②速度を調整する。
-               ここで通常時の zip_xy 設定は自動的に解除されます。 */
+            /* ①スクロール信号に変換し、②速度を1/4に調整する */
             input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 4>;
         };
     };
