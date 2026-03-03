@@ -22,30 +22,40 @@
         map = <0x00 0x08>, <0x01 0x06>;
     };
 
-    /* 3. 【修正ポイント】スクロールの速さを調整 */
-    /* codes = <0x08 0x06>; を追加し、ホイール信号のみを減速対象に指定しました */
+    /* 3. 4方向（上下左右）に動きを限定するフィルタ */
+    /* これを入れることで、斜め移動を「一番近い主軸」に強制的にスナップさせます */
+    zip_scroll_cardinal: zip_scroll_cardinal {
+        compatible = "zmk,input-processor-cardinal-direction";
+        #input-processor-cells = <0>;
+        type = <0x02>;
+        codes = <0x08 0x06>; /* 垂直ホイールと水平ホイールを監視対象に */
+    };
+
+    /* 4. スクロールの速さを調整 */
     zip_scroll_scaler: zip_scroll_scaler {
         compatible = "zmk,input-processor-scaler";
         #input-processor-cells = <2>;
         type = <0x02>;
-        codes = <0x08 0x06>; 
+        codes = <0x08 0x06>;
     };
 
     trackball_listener: trackball_listener {
         compatible = "zmk,input-listener";
         device = <&trackball>;
         
-        /* 通常時：いつもの快適なカーソル移動設定 */
+        /* 通常時：カーソル移動 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* Layer 1 (mo 1) 押下時のスクロール動作 */
+        /* Layer 1 (mo 1) 押下時：4方向限定スクロール */
         scrolling {
             layers = <1>;
-            /* ①スクロール信号に変換し、②速度を1/4に調整する */
-            input-processors = <&zip_xy_to_scroll_mapper>, <&zip_scroll_scaler 1 4>;
+            /* ①スクロール変換 -> ②4方向に限定 -> ③速度調整 の順で処理 */
+            input-processors = 
+                <&zip_xy_to_scroll_mapper>, 
+                <&zip_scroll_cardinal>, 
+                <&zip_scroll_scaler 1 4>;
         };
     };
 };
 
-/* 最後に本体のキーマップを読み込む */
 #include "../../../config/keymap.keymap"
