@@ -13,8 +13,7 @@
         y-codes = <0x01>;
     };
 
-    /* 2. 移動をスクロール信号（ホイール）に変換するマッパー */
-    /* 左右移動(00)を垂直ホイール(08)に、上下移動(01)を水平ホイール(06)に変換 */
+    /* 2. 移動をスクロール信号に変換するマッパー */
     zip_xy_to_scroll_mapper: zip_xy_to_scroll_mapper {
         compatible = "zmk,input-processor-code-mapper";
         #input-processor-cells = <0>;
@@ -22,8 +21,8 @@
         map = <0x00 0x08>, <0x01 0x06>;
     };
 
-    /* 3. 【スクロールの向きを逆転させる設定 */
-    /* 垂直ホイール(08)をX、水平ホイール(06)をYと見なして、反転フラグを適用できるようにします */
+    /* 3. スクロールの向きを逆転させる設定 */
+    /* 垂直(08)をX、水平(06)をYとして扱い、あとで反転フラグをかけます */
     zip_scroll_invert: zip_scroll_invert {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
@@ -32,15 +31,7 @@
         y-codes = <0x06>;
     };
 
-    /* 4. 4方向（上下左右）に動きを限定するフィルタ */
-    zip_scroll_cardinal: zip_scroll_cardinal {
-        compatible = "zmk,input-processor-cardinal-direction";
-        #input-processor-cells = <0>;
-        type = <0x02>;
-        codes = <0x08 0x06>; /* 垂直ホイールと水平ホイールを監視対象に */
-    };
-
-    /* 5. スクロールの速さを調整 */
+    /* 4. スクロールの速さを調整 */
     zip_scroll_scaler: zip_scroll_scaler {
         compatible = "zmk,input-processor-scaler";
         #input-processor-cells = <2>;
@@ -55,14 +46,13 @@
         /* 通常時：カーソル移動 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* Layer 1 (mo 1) 押下時：逆転 ＋ 4方向限定スクロール */
+        /* Layer 1 (mo 1) 押下時：向きを逆転してスクロール */
         scrolling {
             layers = <1>;
-            /* 処理順序：①スクロール変換 -> ②向きを反転 -> ③4方向に限定 -> ④速度調整 */
+            /* ①スクロール変換 -> ②上下左右を逆転 -> ③速度調整 */
             input-processors = 
                 <&zip_xy_to_scroll_mapper>, 
                 <&zip_scroll_invert (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>,
-                <&zip_scroll_cardinal>, 
                 <&zip_scroll_scaler 1 4>;
         };
     };
