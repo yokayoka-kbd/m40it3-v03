@@ -4,7 +4,7 @@
 #include <dt-bindings/zmk/pointing.h>
 
 / {
-    /* 1. 通常移動用の設定（既存） */
+    /* 1. 通常移動用の設定（変更なし） */
     zip_xy: zip_xy {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
@@ -13,7 +13,7 @@
         y-codes = <0x01>;
     };
 
-    /* 2. 移動をスクロール信号に変換するマッパー */
+    /* 2. 移動をスクロール信号に変換（変更なし） */
     zip_xy_to_scroll_mapper: zip_xy_to_scroll_mapper {
         compatible = "zmk,input-processor-code-mapper";
         #input-processor-cells = <0>;
@@ -21,8 +21,7 @@
         map = <0x00 0x08>, <0x01 0x06>;
     };
 
-    /* 3. スクロールの向きを逆転させる設定 */
-    /* 垂直(08)をX、水平(06)をYとして扱い、あとで反転フラグをかけます */
+    /* 3. スクロールの向きを逆転させる設定（変更なし） */
     zip_scroll_invert: zip_scroll_invert {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
@@ -31,7 +30,8 @@
         y-codes = <0x06>;
     };
 
-    /* 4. スクロールの速さを調整 */
+    /* 4. 【ここを調整】スクロールの感度を大幅に下げてブレをカット */
+    /* 分母を「12」に設定。これにより微小な動きが切り捨てられます */
     zip_scroll_scaler: zip_scroll_scaler {
         compatible = "zmk,input-processor-scaler";
         #input-processor-cells = <2>;
@@ -46,14 +46,14 @@
         /* 通常時：カーソル移動 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* Layer 1 (mo 1) 押下時：向きを逆転してスクロール */
+        /* Layer 1 (mo 1) 押下時：ブレ抑制スクロール */
         scrolling {
             layers = <1>;
-            /* ①スクロール変換 -> ②上下左右を逆転 -> ③速度調整 */
             input-processors = 
                 <&zip_xy_to_scroll_mapper>, 
                 <&zip_scroll_invert (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>,
-                <&zip_scroll_scaler 1 4>;
+                /* 前回の 1 4 から 1 12 に変更。数字を大きくするほど「小さな動き」を無視します */
+                <&zip_scroll_scaler 1 12>;
         };
     };
 };
