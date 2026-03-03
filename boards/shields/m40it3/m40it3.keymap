@@ -4,7 +4,7 @@
 #include <dt-bindings/zmk/pointing.h>
 
 / {
-    /* 1. 通常移動用の設定：XY入れ替え(SWAP) と X反転(INVERT) */
+    /* 1. 通常移動用の設定（既存） */
     zip_xy: zip_xy {
         compatible = "zmk,input-processor-transform";
         #input-processor-cells = <1>;
@@ -22,8 +22,17 @@
         map = <0x00 0x08>, <0x01 0x06>;
     };
 
-    /* 3. 4方向（上下左右）に動きを限定するフィルタ */
-    /* これを入れることで、斜め移動を「一番近い主軸」に強制的にスナップさせます */
+    /* 3. 【スクロールの向きを逆転させる設定 */
+    /* 垂直ホイール(08)をX、水平ホイール(06)をYと見なして、反転フラグを適用できるようにします */
+    zip_scroll_invert: zip_scroll_invert {
+        compatible = "zmk,input-processor-transform";
+        #input-processor-cells = <1>;
+        type = <0x02>;
+        x-codes = <0x08>; 
+        y-codes = <0x06>;
+    };
+
+    /* 4. 4方向（上下左右）に動きを限定するフィルタ */
     zip_scroll_cardinal: zip_scroll_cardinal {
         compatible = "zmk,input-processor-cardinal-direction";
         #input-processor-cells = <0>;
@@ -31,7 +40,7 @@
         codes = <0x08 0x06>; /* 垂直ホイールと水平ホイールを監視対象に */
     };
 
-    /* 4. スクロールの速さを調整 */
+    /* 5. スクロールの速さを調整 */
     zip_scroll_scaler: zip_scroll_scaler {
         compatible = "zmk,input-processor-scaler";
         #input-processor-cells = <2>;
@@ -46,12 +55,13 @@
         /* 通常時：カーソル移動 */
         input-processors = <&zip_xy (INPUT_TRANSFORM_XY_SWAP | INPUT_TRANSFORM_X_INVERT)>;
 
-        /* Layer 1 (mo 1) 押下時：4方向限定スクロール */
+        /* Layer 1 (mo 1) 押下時：逆転 ＋ 4方向限定スクロール */
         scrolling {
             layers = <1>;
-            /* ①スクロール変換 -> ②4方向に限定 -> ③速度調整 の順で処理 */
+            /* 処理順序：①スクロール変換 -> ②向きを反転 -> ③4方向に限定 -> ④速度調整 */
             input-processors = 
                 <&zip_xy_to_scroll_mapper>, 
+                <&zip_scroll_invert (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>,
                 <&zip_scroll_cardinal>, 
                 <&zip_scroll_scaler 1 4>;
         };
