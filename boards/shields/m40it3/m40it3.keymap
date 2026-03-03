@@ -52,8 +52,8 @@
             input-processors = 
                 <&zip_xy_to_scroll_mapper>, 
                 <&zip_scroll_invert (INPUT_TRANSFORM_X_INVERT | INPUT_TRANSFORM_Y_INVERT)>,
-                /* 前回の 1 4 から 1 12 に変更。数字を大きくするほど「小さな動き」を無視します */
-                <&zip_scroll_scaler 1 12>;
+                /* 前回の 1 4 から 1 22 に変更。数字を大きくするほど「小さな動き」を無視します */
+                <&zip_scroll_scaler 1 22>;
         };
     };
 };
